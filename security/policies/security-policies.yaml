@@ -1,0 +1,136 @@
+# Security Policies as Code for OKD Cluster
+
+# OPA Gatekeeper Policies
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequiredsecuritycontext
+  annotations:
+    description: "Requires pods to have security context with specific settings"
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredSecurityContext
+      validation:
+        properties:
+          runAsNonRoot:
+            type: boolean
+          runAsUser:
+            type: integer
+          fsGroup:
+            type: integer
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredsecuritycontext
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.runAsNonRoot
+          msg := "Container must run as non-root user"
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.securityContext.runAsUser == 0
+          msg := "Container cannot run as root (UID 0)"
+        }
+        
+        violation[{"msg": msg}] {
+          not input.review.object.spec.securityContext.fsGroup
+          msg := "Pod must specify fsGroup in security context"
+        }
+
+---
+apiVersion: config.gatekeeper.sh/v1alpha1
+kind: K8sRequiredSecurityContext
+metadata:
+  name: security-context-required
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    excludedNamespaces: 
+      - kube-system
+      - openshift-system
+      - openshift-kube-apiserver
+  parameters:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+
+---
+# Network Policy Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequirednetworkpolicies
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequiredNetworkPolicies
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequirednetworkpolicies
+        
+        violation[{"msg": msg}] {
+          input.review.kind.kind == "Namespace"
+          input.review.operation == "CREATE"
+          not has_network_policy
+          msg := "Namespace must have a default deny network policy"
+        }
+        
+        has_network_policy {
+          # This would need to be implemented with external data
+          # for checking existing network policies
+          true
+        }
+
+---
+# Pod Security Standards
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod-security-standards
+  namespace: openshift-config
+data:
+  config.yaml: |
+    # Restricted Pod Security Standard
+    apiVersion: security.openshift.io/v1
+    kind: SecurityContextConstraints
+    metadata:
+      name: restricted-okd
+    allowHostDirVolumePlugin: false
+    allowHostIPC: false
+    allowHostNetwork: false
+    allowHostPID: false
+    allowHostPorts: false
+    allowPrivilegedContainer: false
+    allowedCapabilities: null
+    defaultAddCapabilities: null
+    fsGroup:
+      type: MustRunAs
+      ranges:
+      - min: 1
+        max: 65535
+    readOnlyRootFilesystem: true
+    requiredDropCapabilities:
+    - KILL
+    - MKNOD
+    - SETUID
+    - SETGID
+    runAsUser:
+      type: MustRunAsNonRoot
+    seLinuxContext:
+      type: MustRunAs
+    volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - persistentVolumeClaim
+    - projected
+    - secret

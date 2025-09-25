@@ -1,0 +1,202 @@
+name: OKD Cluster CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  TERRAFORM_VERSION: 1.6.0
+  ANSIBLE_VERSION: 7.0.0
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    name: Lint and Validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Ansible
+        run: |
+          pip install ansible==${{ env.ANSIBLE_VERSION }}
+          pip install ansible-lint
+      
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive terraform/
+      
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform init -backend=false
+          terraform validate
+      
+      - name: Ansible Lint
+        run: |
+          cd ansible
+          ansible-lint playbooks/
+      
+      - name: Yaml Lint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: |
+            ansible/
+            docker/
+            ci-cd/
+          config_file: .yamllint.yml
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scan
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+      
+      - name: Run Checkov static analysis
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: terraform,ansible
+          output_format: cli,sarif
+          output_file_path: reports/results.sarif
+      
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  terraform-plan:
+    runs-on: ubuntu-latest
+    name: Terraform Plan
+    if: github.event_name == 'pull_request'
+    needs: [lint-and-validate, security-scan]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+        env:
+          CONSUL_HTTP_ADDR: ${{ secrets.CONSUL_HTTP_ADDR }}
+      
+      - name: Terraform Plan
+        run: |
+          cd terraform
+          terraform plan -var-file=environments/dev.tfvars -out=tfplan
+        env:
+          TF_VAR_vsphere_server: ${{ secrets.VSPHERE_SERVER }}
+          TF_VAR_vsphere_user: ${{ secrets.VSPHERE_USER }}
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+      
+      - name: Upload Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: terraform/tfplan
+
+  terraform-apply:
+    runs-on: ubuntu-latest
+    name: Terraform Apply
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [lint-and-validate, security-scan]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+      
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+        env:
+          CONSUL_HTTP_ADDR: ${{ secrets.CONSUL_HTTP_ADDR }}
+      
+      - name: Terraform Apply
+        run: |
+          cd terraform
+          terraform apply -var-file=environments/prod.tfvars -auto-approve
+        env:
+          TF_VAR_vsphere_server: ${{ secrets.VSPHERE_SERVER }}
+          TF_VAR_vsphere_user: ${{ secrets.VSPHERE_USER }}
+          TF_VAR_vsphere_password: ${{ secrets.VSPHERE_PASSWORD }}
+
+  ansible-deploy:
+    runs-on: ubuntu-latest
+    name: Ansible Deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [terraform-apply]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Ansible
+        run: |
+          pip install ansible==${{ env.ANSIBLE_VERSION }}
+          ansible-galaxy collection install community.vmware
+      
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OKD_SSH_PRIVATE_KEY }}" > ~/.ssh/okd-cluster-key
+          chmod 600 ~/.ssh/okd-cluster-key
+      
+      - name: Run Ansible Playbook
+        run: |
+          cd ansible
+          ansible-playbook -i inventory/prod playbooks/site.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: false
+
+  notify:
+    runs-on: ubuntu-latest
+    name: Notify Deployment
+    if: always()
+    needs: [ansible-deploy]
+    steps:
+      - name: Notify Success
+        if: needs.ansible-deploy.result == 'success'
+        run: echo "✅ OKD Cluster deployment successful!"
+      
+      - name: Notify Failure
+        if: needs.ansible-deploy.result == 'failure'
+        run: echo "❌ OKD Cluster deployment failed!"
