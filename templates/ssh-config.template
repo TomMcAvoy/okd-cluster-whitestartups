@@ -1,0 +1,164 @@
+# SSH Configuration Template for OKD Cluster Development
+# Copy relevant sections to ~/.ssh/config
+
+# =============================================================================
+# GitHub Configuration
+# =============================================================================
+
+# Primary GitHub access for OKD project
+Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_okd
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+
+# Alternative GitHub host (useful for multiple keys)
+Host github-okd
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_okd
+    IdentitiesOnly yes
+    AddKeysToAgent yes
+
+# =============================================================================
+# OKD Cluster Nodes Configuration
+# =============================================================================
+
+# Master nodes
+Host okd-master-*
+    User core
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    Port 22
+    ConnectTimeout 10
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# Worker nodes  
+Host okd-worker-*
+    User core
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    Port 22
+    ConnectTimeout 10
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# Bootstrap node (temporary during installation)
+Host okd-bootstrap
+    User core
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    Port 22
+    ConnectTimeout 10
+
+# =============================================================================
+# Infrastructure Hosts
+# =============================================================================
+
+# Load balancer / HAProxy
+Host okd-lb
+    User root
+    IdentityFile ~/.ssh/id_ed25519_okd
+    Port 22
+    ConnectTimeout 10
+
+# DNS Server
+Host okd-dns  
+    User root
+    IdentityFile ~/.ssh/id_ed25519_okd
+    Port 22
+    ConnectTimeout 10
+
+# Registry server (for disconnected installations)
+Host okd-registry
+    User root
+    IdentityFile ~/.ssh/id_ed25519_okd
+    Port 22
+    ConnectTimeout 10
+
+# =============================================================================
+# Development and Management Hosts
+# =============================================================================
+
+# Bastion/Jump host
+Host okd-bastion
+    User ${USER}
+    IdentityFile ~/.ssh/id_ed25519_okd
+    Port 22
+    ConnectTimeout 10
+    ForwardAgent yes
+
+# Development workstation
+Host okd-dev
+    User ${USER}
+    IdentityFile ~/.ssh/id_ed25519_okd
+    Port 22
+    ConnectTimeout 10
+
+# =============================================================================
+# Cloud Provider Specific Examples
+# =============================================================================
+
+# AWS EC2 instances
+Host ec2-okd-*
+    User ec2-user
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+# Google Cloud instances
+Host gcp-okd-*
+    User ${USER}
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+# Azure VMs
+Host azure-okd-*
+    User azureuser
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+# =============================================================================
+# Wildcard Patterns for Dynamic Hosts
+# =============================================================================
+
+# Any host containing 'okd' (catch-all)
+Host *okd*
+    User core
+    IdentityFile ~/.ssh/id_ed25519_okd
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    ConnectTimeout 10
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# =============================================================================
+# Global SSH Settings (Optional)
+# =============================================================================
+
+# Default settings for all hosts
+Host *
+    # Security settings
+    Protocol 2
+    Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+    MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com
+    KexAlgorithms diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+    
+    # Connection settings
+    TCPKeepAlive yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    
+    # Performance settings
+    Compression yes
+    
+    # Disable problematic features for automation
+    ControlMaster no
+    ControlPersist no

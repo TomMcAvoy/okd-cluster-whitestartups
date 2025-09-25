@@ -1,0 +1,50 @@
+# Sensitive Files - Never commit these
+*.key
+*.pem
+*.pat
+*.token
+*_rsa
+*_dsa
+*_ecdsa
+*_ed25519
+.ssh/
+keys/
+secrets/
+*.secret
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+target/
+
+# OKD/OpenShift specific
+kubeconfig
+*.kubeconfig
+cluster-credentials/
+install-config.yaml
+auth/
