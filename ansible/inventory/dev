@@ -1,0 +1,35 @@
+# Development Environment Inventory
+[load_balancers]
+okd-dev-lb ansible_host=192.168.1.100 ansible_user=core
+
+[bootstrap]
+okd-dev-bootstrap ansible_host=192.168.1.101 ansible_user=core
+
+[masters]
+okd-dev-master-0 ansible_host=192.168.1.102 ansible_user=core
+okd-dev-master-1 ansible_host=192.168.1.103 ansible_user=core
+okd-dev-master-2 ansible_host=192.168.1.104 ansible_user=core
+
+[workers]
+okd-dev-worker-0 ansible_host=192.168.1.105 ansible_user=core
+okd-dev-worker-1 ansible_host=192.168.1.106 ansible_user=core
+
+[etcd:children]
+masters
+
+[okd_nodes:children]
+bootstrap
+masters
+workers
+
+[all:vars]
+# SSH Configuration
+ansible_ssh_private_key_file=~/.ssh/okd-cluster-key
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+
+# Cluster Configuration
+cluster_name=okd-dev
+base_domain=dev.whitestartups.local
+cluster_network_cidr=10.128.0.0/14
+service_network_cidr=172.30.0.0/16
+host_prefix=23

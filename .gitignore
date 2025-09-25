@@ -1,0 +1,60 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfplan
+terraform.tfplan.*
+
+# Ansible
+*.retry
+.vault_pass.txt
+inventory/host_vars/
+inventory/group_vars/secrets/
+
+# VMware
+*.vmx~
+*.vmx.lck
+*.vmxf
+*.nvram
+*.log
+*.vmdk
+*.vmem
+*.vmsn
+*.vmss
+
+# Secrets and sensitive data
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+kubeconfig*
+!kubeconfig.template
+
+# Build artifacts
+dist/
+build/
+target/
+*.tar.gz
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.cache/

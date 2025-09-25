@@ -1,0 +1,67 @@
+---
+# Main Site Playbook for OKD Cluster Installation and Configuration
+
+- name: Prepare infrastructure for OKD installation
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: prepare-infrastructure
+      tags: infrastructure
+
+- name: Configure load balancer
+  hosts: load_balancers
+  become: yes
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: load-balancer
+      tags: load_balancer
+
+- name: Install OKD cluster
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: okd-installer
+      tags: install
+
+- name: Post-installation configuration
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: post-install
+      tags: post_install
+
+- name: Configure monitoring and logging
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: monitoring
+      tags: monitoring
+    - role: logging
+      tags: logging
+
+- name: Security hardening
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: security-hardening
+      tags: security
+
+- name: Backup configuration
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: backup
+      tags: backup

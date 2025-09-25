@@ -5,11 +5,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/thomasmcavoy/okd-home-project'
+    repoURL: "https://github.com/thomasmcavoy/okd-home-project"
     targetRevision: HEAD
     path: argocd
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: "https://kubernetes.default.svc"
     namespace: default
   syncPolicy:
     automated:
