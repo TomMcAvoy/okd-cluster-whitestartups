@@ -1,0 +1,68 @@
+version: '3.8'
+services:
+  vault:
+    image: hashicorp/vault:1.15.4
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    restart: unless-stopped
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-grafana/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  teleport:
+    image: public.ecr.aws/gravitational/teleport:latest
+    container_name: teleport
+    ports:
+      - "3022:3022"
+      - "3080:3080"
+    restart: unless-stopped
+
+  argocd:
+    image: argoproj/argocd:v2.10.7
+    container_name: argocd
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  tekton:
+    image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/webhook:v0.54.0
+    container_name: tekton
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  falco:
+    image: falcosecurity/falco:latest
+    container_name: falco
+    privileged: true
+    restart: unless-stopped
+
+# Add volumes/configs as needed for persistent data and custom configuration

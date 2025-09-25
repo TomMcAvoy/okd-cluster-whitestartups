@@ -1,0 +1,3 @@
+# Kustomize base for OKD cluster
+resources:
+  - ../argocd/application.yaml

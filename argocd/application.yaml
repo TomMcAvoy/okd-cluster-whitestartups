@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: okd-cluster-app
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/thomasmcavoy/okd-home-project'
+    targetRevision: HEAD
+    path: argocd
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

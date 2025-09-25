@@ -1,0 +1,19 @@
+{
+  "name": "okd-home-project",
+  "version": "0.1.0",
+  "description": "OKD cluster automation with TypeScript, pnpm, and DevSecOps best practices.",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src --ext .ts",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "eslint": "^8.56.0"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

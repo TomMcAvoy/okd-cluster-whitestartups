@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: okd-cluster-pipeline
+spec:
+  tasks:
+    - name: lint
+      taskRef:
+        name: lint-task
+    - name: build
+      taskRef:
+        name: build-task
+    - name: security-scan
+      taskRef:
+        name: trivy-scan-task

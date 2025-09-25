@@ -1,0 +1,4 @@
+apiVersion: v2
+name: okd-cluster
+version: 0.1.0
+description: A Helm chart for OKD cluster automation
