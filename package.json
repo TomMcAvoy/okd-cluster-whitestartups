@@ -5,11 +5,22 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint src --ext .ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "ddns:install": "bash scripts/ddns/install-free-ddns.sh",
+    "ddns:start": "tsx src/infrastructure/ddns/index.ts",
+    "ddns:dev": "tsx watch src/infrastructure/ddns/index.ts",
+    "ddns:debug": "DEBUG=true AGGRESSIVE_SCAN=true tsx src/infrastructure/ddns/index.ts",
+    "ddns:scan": "bash scripts/ddns/comprehensive-mac-scan.sh",
+    "ddns:stop": "sudo systemctl stop okd-ddns 2>/dev/null || launchctl stop com.okd.ddns 2>/dev/null || true",
+    "ddns:status": "sudo systemctl status okd-ddns 2>/dev/null || launchctl list | grep okd 2>/dev/null || echo 'Service not found'",
+    "ddns:logs": "tail -f logs/ddns.log",
+    "ddns:restart": "pnpm ddns:stop && sleep 2 && pnpm ddns:start"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.11.0"
   },
   "dependencies": {},
   "engines": {

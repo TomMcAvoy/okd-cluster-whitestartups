@@ -13,6 +13,11 @@ terraform.tfplan.*
 inventory/host_vars/
 inventory/group_vars/secrets/
 
+# DDNS cache and logs
+cache/
+logs/
+config/ddns-config.json
+
 # VMware
 *.vmx~
 *.vmx.lck
@@ -39,6 +44,13 @@ build/
 target/
 *.tar.gz
 *.zip
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # IDE
 .vscode/

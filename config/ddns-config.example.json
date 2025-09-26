@@ -1,0 +1,9 @@
+{
+  "localDomain": "home.local",
+  "hubIP": "192.168.2.1",
+  "externalDomain": "",
+  "monitoring": {
+    "scanInterval": 120,
+    "logLevel": "info"
+  }
+}

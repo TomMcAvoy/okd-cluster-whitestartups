@@ -1,0 +1,24 @@
+# OKD Cluster DNS Records
+# Use these in your cluster configuration
+
+# Mac devices in cluster:
+# Node 1: macbook-pro4.home.local -> 192.168.2.38
+macbook-pro4.home.local. 300 IN A 192.168.2.38
+api.macbook-pro4.home.local. 300 IN A 192.168.2.38
+*.apps.macbook-pro4.home.local. 300 IN A 192.168.2.38
+# Node 2: mac-c928d2.home.local -> 192.168.2.60
+mac-c928d2.home.local. 300 IN A 192.168.2.60
+api.mac-c928d2.home.local. 300 IN A 192.168.2.60
+*.apps.mac-c928d2.home.local. 300 IN A 192.168.2.60
+# Node 3: mac-3d0f12.home.local -> 192.168.2.171
+mac-3d0f12.home.local. 300 IN A 192.168.2.171
+api.mac-3d0f12.home.local. 300 IN A 192.168.2.171
+*.apps.mac-3d0f12.home.local. 300 IN A 192.168.2.171
+# Node 4: macbook-pro3.home.local -> 192.168.2.174
+macbook-pro3.home.local. 300 IN A 192.168.2.174
+api.macbook-pro3.home.local. 300 IN A 192.168.2.174
+*.apps.macbook-pro3.home.local. 300 IN A 192.168.2.174
+# Node 5: macbook-pro2.home.local -> 192.168.2.186
+macbook-pro2.home.local. 300 IN A 192.168.2.186
+api.macbook-pro2.home.local. 300 IN A 192.168.2.186
+*.apps.macbook-pro2.home.local. 300 IN A 192.168.2.186

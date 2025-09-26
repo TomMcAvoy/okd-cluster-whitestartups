@@ -1,0 +1,4 @@
+# Add to .gitignore
+cache/
+logs/
+config/ddns-config.json
