@@ -17,8 +17,6 @@
     "ddns:restart": "pnpm ddns:stop && sleep 2 && pnpm ddns:start"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "@types/node": "^20.11.0"
   },
